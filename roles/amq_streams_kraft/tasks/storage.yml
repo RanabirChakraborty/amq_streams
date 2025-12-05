@@ -1,0 +1,12 @@
+---
+- name: Check if KRaft metadata log already formatted
+  ansible.builtin.stat:
+    path: "{{ amq_streams_kraft_data_dir }}/meta.properties"
+  register: meta_file
+
+- name: Format storage directory if not formatted
+  ansible.builtin.command: >
+    {{ amq_streams_install_dir }}/current/bin/kafka-storage.sh format
+    --config {{ amq_streams_kraft_config_dir }}/server.properties
+    --cluster-id {{ amq_streams_cluster_id }}
+  when: not meta_file.stat.exists

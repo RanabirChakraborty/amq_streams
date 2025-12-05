@@ -1,0 +1,49 @@
+---
+- name: "Automate AMQ Streams KRaft install"
+  hosts: all
+  become: true
+  vars_files:
+    - vars.yml
+  roles:
+    - role: amq_streams_kraft
+  tasks:
+    - name: "Ensure Broker (KRaft mode) is running"
+      ansible.builtin.include_role:
+        name: amq_streams_broker
+      vars:
+        amq_streams_common_skip_download: true
+
+    - name: "Validate that KRaft deployment is functional."
+      ansible.builtin.include_role:
+        name: amq_streams_kraft
+        tasks_from: validate.yml
+
+    - name: "Validate Broker functionality in KRaft mode."
+      ansible.builtin.include_role:
+        name: amq_streams_broker
+        tasks_from: validate.yml
+
+  post_tasks:
+
+    - name: "Ensures test topic exists"
+      ansible.builtin.include_role:
+        name: amq_streams_broker
+        tasks_from: topic/create.yml
+      vars:
+        topic_name: "kraftTestTopic"
+        topic_partitions: 1
+        topic_replication_factor: 1
+
+    - name: "Describe created topic"
+      ansible.builtin.include_role:
+        name: amq_streams_broker
+        tasks_from: topic/describe.yml
+      vars:
+        topic_name: "kraftTestTopic"
+
+    - name: "Delete test topic"
+      ansible.builtin.include_role:
+        name: amq_streams_broker
+        tasks_from: topic/delete.yml
+      vars:
+        topic_name: "kraftTestTopic"

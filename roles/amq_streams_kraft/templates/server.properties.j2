@@ -1,0 +1,12 @@
+process.roles={{ amq_streams_kraft_process_roles }}
+node.id={{ amq_streams_kraft_node_id }}
+
+controller.quorum.voters={{ amq_streams_kraft_controller_quorum_voters }}
+
+listeners={{ amq_streams_kraft_listeners | join(',') }}
+listener.security.protocol.map=PLAINTEXT:PLAINTEXT,CONTROLLER:PLAINTEXT
+controller.listener.names={{ amq_streams_kraft_controller_listener_names }}
+
+log.dirs={{ amq_streams_kraft_log_dirs }}
+
+log.retention.hours={{ amq_streams_kraft_log_retention_hours }}

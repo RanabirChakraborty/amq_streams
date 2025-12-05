@@ -1,0 +1,9 @@
+---
+- name: Configure KRaft node
+  ansible.builtin.include_tasks: configure.yml
+
+- name: Format storage if needed
+  ansible.builtin.include_tasks: storage.yml
+
+- name: Deploy systemd service
+  ansible.builtin.include_tasks: service.yml

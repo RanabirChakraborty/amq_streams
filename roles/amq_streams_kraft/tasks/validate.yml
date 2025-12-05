@@ -1,0 +1,10 @@
+---
+- name: Check kafka service is running
+  ansible.builtin.systemd:
+    name: kafka
+  register: kafka_service
+
+- name: Fail if Kafka is not active
+  ansible.builtin.fail:
+    msg: "Kafka KRaft is not running"
+  when: kafka_service.status.ActiveState != "active"

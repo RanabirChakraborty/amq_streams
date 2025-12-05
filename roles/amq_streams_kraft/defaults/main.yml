@@ -1,0 +1,18 @@
+---
+amq_streams_kraft_user: kafka
+amq_streams_kraft_group: kafka
+amq_streams_kraft_config_dir: "/etc/kafka"
+amq_streams_kraft_data_dir: "/var/lib/kafka/kraft"
+amq_streams_cluster_id: ""
+amq_streams_kraft_node_id: 1
+# Format: "<nodeId>@<controller_host>:<controller_port>"
+amq_streams_controller_quorum_voters: "1@localhost:9093"
+# Listener definitions
+amq_streams_kraft_listeners:
+  - "PLAINTEXT://:9092"
+  - "CONTROLLER://:9093"
+# Listener name for controller
+amq_streams_kraft_controller_listener_names: "CONTROLLER"
+amq_streams_process_role: "broker,controller"
+amq_streams_kraft_log_retention_hours: 168
+amq_streams_kraft_log_dirs: "{{ amq_streams_kraft_data_dir }}"
