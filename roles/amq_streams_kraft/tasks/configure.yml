@@ -7,19 +7,22 @@
     prereqs_user: "{{ amq_streams_kraft_user | default('kafka') }}"
     prereqs_group: "{{ amq_streams_kraft_group | default('kafka') }}"
 
-- name: Create KRaft config directory
-  ansible.builtin.file:
-    path: "{{ amq_streams_kraft_config_dir }}"
-    state: directory
-    owner: "{{ amq_streams_kraft_user | default('kafka') }}"
-    group: "{{ amq_streams_kraft_group | default('kafka') }}"
-    mode: '0755'
+- name: "Configure KRaft Settings"
+  become: "{{ amq_streams_kraft_priv_escalation | default(true) }}"
+  block:
+    - name: Create KRaft config directory
+      ansible.builtin.file:
+        path: "{{ amq_streams_kraft_config_dir }}"
+        state: directory
+        owner: "{{ amq_streams_kraft_user | default('kafka') }}"
+        group: "{{ amq_streams_kraft_group | default('kafka') }}"
+        mode: '0755'
 
-- name: Deploy server.properties
-  ansible.builtin.template:
-    src: server.properties.j2
-    dest: "{{ amq_streams_kraft_config_dir }}/server.properties"
-    owner: "{{ amq_streams_kraft_user | default('kafka') }}"
-    group: "{{ amq_streams_kraft_group | default('kafka') }}"
-    mode: '0644'
-  notify: Restart Kafka
+    - name: Deploy server.properties
+      ansible.builtin.template:
+        src: server.properties.j2
+        dest: "{{ amq_streams_kraft_config_dir }}/server.properties"
+        owner: "{{ amq_streams_kraft_user | default('kafka') }}"
+        group: "{{ amq_streams_kraft_group | default('kafka') }}"
+        mode: '0644'
+      notify: Restart Kafka
