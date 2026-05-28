@@ -23,7 +23,7 @@
 
 - name: "Determine which archive to download using file pattern: {{ rhn_product_archive_file_pattern }}."
   ansible.builtin.set_fact:
-    rhn_filtered_products: "{{ rhn_products.results | selectattr('file_path', 'match', rhn_product_archive_file_pattern) }}"
+    rhn_filtered_products: "{{ rhn_products.results | selectattr('file_name', 'match', rhn_product_archive_file_pattern) }}"
 
 - name: "Download rhn_filtered_products[0]"
   ansible.builtin.include_role:
