@@ -192,3 +192,23 @@ releases:
     release_date: '2025-12-16'
   1.0.1:
     release_date: '2026-03-26'
+  1.0.2:
+    changes:
+      major_changes:
+      - 'AMW-540 Fix the upstream collection requirements with common v1.2.4 `#138
+        <https://github.com/ansible-middleware/amq_streams/pull/138>`_
+
+        '
+      minor_changes:
+      - 'Add missing variables documentation, plus a few minors tweaks, mostly focused
+        on CI issues `#126 <https://github.com/ansible-middleware/amq_streams/pull/126>`_
+
+        '
+      - 'Fix certification requirements for AMQ Streams `#137 <https://github.com/ansible-middleware/amq_streams/pull/137>`_
+
+        '
+    fragments:
+    - 126.yaml
+    - 137.yaml
+    - 138.yaml
+    release_date: '2026-05-28'
