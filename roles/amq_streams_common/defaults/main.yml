@@ -1,7 +1,8 @@
 ---
 amq_streams_common_product_version: 4.1.1
 amq_streams_common_rhn_product_version: 2.6.0
-amq_streams_common_rhn_home_dir: "kafka_2.13-{{ amq_streams_common_product_version }}.redhat-00005"
+amq_streams_common_rhn_kafka_version: 3.6.0
+amq_streams_common_rhn_home_dir: "kafka_{{ amq_streams_common_scala_version }}-{{ amq_streams_common_rhn_kafka_version }}.redhat-00005"
 amq_streams_common_rhn_product_path: /opt
 amq_streams_common_redhat_enabled: false
 amq_streams_common_rhn_product_category: 'jboss.amq.streams'
@@ -29,7 +30,7 @@ amq_streams_common_openjdk_version: 17
 
 amq_streams_common_systemd_home: '/usr/lib/systemd/system'
 amq_streams_common_systemd_service_config_file_template: 'templates/service_systemd.j2'
-amq_streams_common_home: "{{ amq_streams_common_install_dir }}/kafka_{{ amq_streams_common_version }}/"
+amq_streams_common_home: "{{ amq_streams_common_install_dir }}/kafka_{{ amq_streams_common_version }}"
 
 amq_streams_common_firewalld_package_name:
   - firewalld

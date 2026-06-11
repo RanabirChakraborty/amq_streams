@@ -1,6 +1,6 @@
 ---
 amq_streams_install_dir: "/opt"
-amq_streams_kafka_home: "{{ amq_streams_install_dir }}/kafka_{{ amq_streams_common_version }}/"
+amq_streams_kafka_home: "{{ amq_streams_common_home }}"
 amq_streams_kraft_config_dir: "{{ amq_streams_kafka_home }}/config"
 amq_streams_kraft_data_dir: "{{ amq_streams_kafka_home }}/data/kraft"
 amq_streams_cluster_id: ""
