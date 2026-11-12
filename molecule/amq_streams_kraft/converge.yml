@@ -2,6 +2,12 @@
 - name: "Automate AMQ Streams KRaft install"
   hosts: all
   vars:
+    # Simulate a deployment made with collection <= 1.0.4, whose default data dir was
+    # inside the versioned Kafka home. Converge only: side_effect uses the role default,
+    # so the run there has to migrate the data.
+    amq_streams_kraft_data_dir: "{{ amq_streams_kafka_home }}/data/kraft"
+    migration_topic: migrationTopic
+    migration_message_count: 100
     # Topic Management
     amq_streams_broker_topics:
       - name: sampleTopic
@@ -66,3 +72,32 @@
         loop_var: topic
       vars:
         topic_name: "{{ topic.name }}"
+
+    - name: "Create topic that must survive the data dir migration: {{ migration_topic }}"
+      ansible.builtin.command: >-
+        {{ amq_streams_kafka_home }}/bin/kafka-topics.sh --bootstrap-server localhost:9092
+        --create --if-not-exists --topic {{ migration_topic }} --partitions 1 --replication-factor 1
+      changed_when: false
+
+    - name: "Read current message count of {{ migration_topic }}"
+      ansible.builtin.command: >-
+        {{ amq_streams_kafka_home }}/bin/kafka-get-offsets.sh --bootstrap-server localhost:9092
+        --topic {{ migration_topic }}
+      register: __migration_offsets
+      changed_when: false
+
+    - name: "Produce {{ migration_message_count }} messages (only once, keeps idempotence)"
+      ansible.builtin.shell: >-
+        set -o pipefail &&
+        seq 1 {{ migration_message_count }} | sed 's/^/msg-/' |
+        {{ amq_streams_kafka_home }}/bin/kafka-console-producer.sh
+        --bootstrap-server localhost:9092 --topic {{ migration_topic }}
+      args:
+        executable: /bin/bash
+      changed_when: false
+      when: __migration_offsets.stdout is search(migration_topic ~ ':0:0$')
+
+    - name: "Record the cluster ID before migration"
+      ansible.builtin.shell: >-
+        grep -h '^cluster.id=' {{ amq_streams_kraft_data_dir }}/meta.properties | cut -d= -f2 > /root/original_cluster_id
+      changed_when: false

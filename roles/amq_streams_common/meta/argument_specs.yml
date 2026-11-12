@@ -55,19 +55,19 @@ argument_specs:
                 default: true
                 description: "TODO document argument"
                 type: "bool"
-            amq_streams_common_escalade_privilege_user_create:
+            amq_streams_common_escalate_privilege_user_create:
                 default: true
                 description: "TODO document argument"
                 type: "bool"
-            amq_streams_common_escalade_privilege_user_group:
+            amq_streams_common_escalate_privilege_user_group:
                 default: true
                 description: "TODO document argument"
                 type: "bool"
-            amq_streams_common_escalade_privilege_group_create:
+            amq_streams_common_escalate_privilege_group_create:
                 default: true
                 description: "TODO document argument"
                 type: "bool"
-            amq_streams_common_escalade_privilege_config_file:
+            amq_streams_common_escalate_privilege_config_file:
                 default: true
                 description: "TODO document argument"
                 type: "bool"

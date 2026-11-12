@@ -7,12 +7,12 @@
     quiet: true
 
 - name: "Ensure required group exists {{ group }}"
-  become: "{{ amq_streams_common_escalade_privilege_group_create }}"
+  become: "{{ amq_streams_common_escalate_privilege_group_create }}"
   ansible.builtin.group:
     name: "{{ group }}"
 
 - name: "Ensure required user exists {{ user }}"
-  become: "{{ amq_streams_common_escalade_privilege_user_create }}"
+  become: "{{ amq_streams_common_escalate_privilege_user_create }}"
   ansible.builtin.user:
     name: "{{ user }}"
     group: "{{ group }}"

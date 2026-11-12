@@ -6,7 +6,7 @@
     quiet: true
 
 - name: "Switch to root"
-  become: "{{ amq_streams_common_escalade_privilege_group_create }}"
+  become: "{{ amq_streams_common_escalate_privilege_group_create }}"
   block:
     - name: "Ensure server configuration is deployed: {{ server_name }}"
       ansible.builtin.template:

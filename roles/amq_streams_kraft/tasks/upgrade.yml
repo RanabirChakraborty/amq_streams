@@ -1,0 +1,72 @@
+---
+- name: "Validate upgrade parameters are provided."
+  ansible.builtin.assert:
+    that:
+      - amq_streams_common_product_version is defined
+    fail_msg: "Upgrade target version (amq_streams_common_product_version) must be defined."
+    quiet: true
+
+- name: "Read the systemd unit of the currently installed Kafka."
+  ansible.builtin.slurp:
+    src: "{{ amq_streams_common_systemd_home }}/{{ amq_streams_kraft_service_name }}.service"
+  register: __kraft_unit
+  failed_when: false
+
+- name: "Set currently installed Kafka home (from ExecStart in the unit)."
+  ansible.builtin.set_fact:
+    __kraft_installed_home: "{{ (__kraft_unit.content | default('') | b64decode | regex_search('ExecStart=(\\S+)/bin/kafka-server-start\\.sh', '\\1')) | default([''], true) | first }}"
+
+- name: "Determine currently installed Kafka version."
+  ansible.builtin.command:
+    cmd: "{{ __kraft_installed_home }}/bin/kafka-topics.sh --version"
+  register: __current_kafka_version
+  changed_when: false
+  failed_when: false
+  when: __kraft_installed_home | default('') | length > 0
+
+- name: "Display upgrade versions."
+  ansible.builtin.debug:
+    msg: "Upgrading KRaft from Kafka {{ __current_kafka_version.stdout | default('unknown') }} to {{ amq_streams_common_product_version }}"
+
+- name: "Stop KRaft service: {{ amq_streams_kraft_service_name }}"
+  become: "{{ amq_streams_kraft_priv_escalation }}"
+  ansible.builtin.service:
+    name: "{{ amq_streams_kraft_service_name }}"
+    state: stopped
+
+- name: "Wait for KRaft listener port to be released."
+  ansible.builtin.wait_for:
+    port: "{{ amq_streams_kraft_listener_port }}"
+    state: stopped
+    timeout: 60
+
+- name: "Migrate KRaft data from the currently installed version's data dir (if any)."
+  ansible.builtin.include_tasks: migrate_data.yml
+  vars:
+    __kraft_migration_source: "{{ __kraft_installed_home }}/data/kraft"
+  when: __kraft_installed_home | default('') | length > 0
+
+- name: "Install new Kafka version."
+  ansible.builtin.include_role:
+    name: amq_streams_common
+    tasks_from: install.yml
+
+- name: "Redeploy KRaft configuration and systemd service."
+  ansible.builtin.include_tasks: service.yml
+
+- name: "Verify installed Kafka version after upgrade."
+  ansible.builtin.command:
+    cmd: "{{ amq_streams_common_home }}/bin/kafka-topics.sh --version"
+  register: __upgraded_kafka_version
+  changed_when: false
+
+- name: "Display upgraded Kafka version."
+  ansible.builtin.debug:
+    msg: "KRaft upgraded successfully to Kafka {{ __upgraded_kafka_version.stdout }}"
+
+- name: "Validate KRaft node is functional after upgrade."
+  ansible.builtin.include_role:
+    name: amq_streams_common
+    tasks_from: validation/service.yml
+  vars:
+    service_name: "{{ amq_streams_kraft_service_name }}"

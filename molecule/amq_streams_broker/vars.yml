@@ -1,6 +1,6 @@
 ---
-amq_streams_common_escalade_privilege_group_create: "{{ amq_streams_install_requires_become | default(true) }}"
-amq_streams_common_escalade_privilege_user_create: "{{ amq_streams_install_requires_become | default(true) }}"
+amq_streams_common_escalate_privilege_group_create: "{{ amq_streams_install_requires_become | default(true) }}"
+amq_streams_common_escalate_privilege_user_create: "{{ amq_streams_install_requires_become | default(true) }}"
 amq_streams_common_archive_extraction_requires_privilege_escalation: "{{ amq_streams_install_requires_become | default(true) }}"
 amq_streams_common_dependencies_require_priv: "{{ amq_streams_install_requires_become | default(true) }}"
 amq_streams_zookeeper_data_require_priv_escalation: "{{ amq_streams_install_requires_become | default(true) }}"
@@ -10,4 +10,4 @@ amq_streams_broker_config_files_requires_privilege_escalation: "{{ amq_streams_i
 amq_streams_cruise_control_path_to_capacity_file_require_priv_escalation: "{{ amq_streams_install_requires_become | default(true) }}"
 amq_streams_cruise_control_logfiles_requires_priv_escalation: "{{ amq_streams_install_requires_become | default(true) }}"
 amq_streams_connect_source_file_require_priv_escalation: "{{ amq_streams_install_requires_become | default(true) }}"
-amq_streams_common_product_version: 3.9.0
+amq_streams_common_product_version: 3.8.0

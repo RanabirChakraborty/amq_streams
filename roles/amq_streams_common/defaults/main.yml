@@ -15,10 +15,10 @@ amq_streams_common_download_dir: "{{ lookup('env', 'PWD') | default('/opt') }}"
 amq_streams_common_archive_extraction_requires_privilege_escalation: true
 # amq_streams_common_download_group: "{{ lookup('env', 'USER') | default('root') }}"
 # amq_streams_common_download_user: "{{ lookup('env', 'USER') | default('root') }}"
-amq_streams_common_escalade_privilege_user_create: true
-amq_streams_common_escalade_privilege_user_group: true
-amq_streams_common_escalade_privilege_group_create: true
-amq_streams_common_escalade_privilege_config_file: true
+amq_streams_common_escalate_privilege_user_create: true
+amq_streams_common_escalate_privilege_user_group: true
+amq_streams_common_escalate_privilege_group_create: true
+amq_streams_common_escalate_privilege_config_file: true
 amq_streams_common_install_dir: /opt
 amq_streams_common_offline_install: false
 amq_streams_common_path_to_archive_file: "{{ amq_streams_common_download_dir }}/{{ amq_streams_common_archive_file }}"

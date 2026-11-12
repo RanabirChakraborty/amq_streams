@@ -1,4 +1,9 @@
 ---
+- name: Migrate KRaft data from the previous version-specific data dir (if any)
+  ansible.builtin.include_tasks: migrate_data.yml
+  vars:
+    __kraft_migration_source: "{{ amq_streams_kafka_home }}/data/kraft"
+
 - name: Check if KRaft metadata log already formatted
   ansible.builtin.stat:
     path: "{{ amq_streams_kraft_data_dir }}/meta.properties"

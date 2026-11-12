@@ -1,13 +1,79 @@
 ---
 - name: Verify
   hosts: all
+  vars:
+    kafka_bin: /opt/kafka_2.13-4.1.1/bin
+    old_data_dir: /opt/kafka_2.13-4.0.0/data/kraft
+    new_data_dir: /var/lib/amq_streams_kraft
+    migration_topic: migrationTopic
+    migration_message_count: 100
   tasks:
 
     - name: Populate service facts
       ansible.builtin.service_facts:
 
     - name: Check KRaft service
-      assert:
+      ansible.builtin.assert:
         that:
           - ansible_facts.services["amq_streams_kraft.service"]["state"] == "running"
           - ansible_facts.services["amq_streams_kraft.service"]["status"] == "enabled"
+
+    - name: Read active server.properties (from the systemd unit)
+      ansible.builtin.shell: |
+        set -o pipefail
+        CFG=$(systemctl cat amq_streams_kraft | grep -oE '/[^ ]*server\.properties' | head -1)
+        grep '^log.dirs=' "$CFG"
+      args:
+        executable: /bin/bash
+      register: __log_dirs
+      changed_when: false
+
+    - name: Check data dir state
+      ansible.builtin.stat:
+        path: "{{ item }}"
+      loop:
+        - "{{ new_data_dir }}/meta.properties"
+        - "{{ old_data_dir }}"
+      register: __dirs
+
+    - name: Data was migrated to the new default data dir
+      ansible.builtin.assert:
+        that:
+          - __log_dirs.stdout == 'log.dirs=' ~ new_data_dir
+          - __dirs.results[0].stat.exists
+          - not __dirs.results[1].stat.exists
+        fail_msg: "{{ __log_dirs.stdout }}, new meta.properties: {{ __dirs.results[0].stat.exists }}, old dir exists: {{ __dirs.results[1].stat.exists }}"
+
+    - name: Read cluster ID before (converge) and now
+      ansible.builtin.shell: |
+        set -o pipefail
+        echo "$(cat /root/original_cluster_id) $(grep -h '^cluster.id=' {{ new_data_dir }}/meta.properties | cut -d= -f2)"
+      args:
+        executable: /bin/bash
+      register: __ids
+      changed_when: false
+
+    - name: Cluster ID is unchanged (migrated, not re-formatted)
+      ansible.builtin.assert:
+        that:
+          - (__ids.stdout.split() | length) == 2
+          - __ids.stdout.split()[0] == __ids.stdout.split()[1]
+        fail_msg: "before / now: {{ __ids.stdout }}"
+
+    - name: Consume all messages from the beginning
+      ansible.builtin.command: >-
+        {{ kafka_bin }}/kafka-console-consumer.sh --bootstrap-server localhost:9092
+        --topic {{ migration_topic }} --partition 0 --offset earliest
+        --max-messages {{ migration_message_count }} --timeout-ms 60000
+      register: __consumed
+      changed_when: false
+
+    - name: All messages are still there
+      vars:
+        __msg_lines: "{{ __consumed.stdout_lines | select('match', '^msg-') | list }}"
+      ansible.builtin.assert:
+        that:
+          - __msg_lines | length == migration_message_count
+          - "'msg-1' in __msg_lines"
+          - "'msg-' ~ migration_message_count in __msg_lines"
+        fail_msg: "consumed {{ __msg_lines | length }} of {{ migration_message_count }}"
