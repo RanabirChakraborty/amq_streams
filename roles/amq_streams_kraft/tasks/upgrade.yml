@@ -37,6 +37,22 @@
     state: stopped
     timeout: 60
 
+- name: "Read the systemd unit of the currently installed Kafka."
+  ansible.builtin.slurp:
+    src: "{{ amq_streams_common_systemd_home }}/{{ amq_streams_kraft_service_name }}.service"
+  register: __kraft_unit
+  failed_when: false
+
+- name: "Set currently installed Kafka home (from ExecStart in the unit)."
+  ansible.builtin.set_fact:
+    __kraft_installed_home: "{{ (__kraft_unit.content | default('') | b64decode | regex_search('ExecStart=(\\S+)/bin/kafka-server-start\\.sh', '\\1')) | default([''], true) | first }}"
+
+- name: "Migrate KRaft data from the currently installed version's data dir (if any)."
+  ansible.builtin.include_tasks: migrate_data.yml
+  vars:
+    __kraft_migration_source: "{{ __kraft_installed_home }}/data/kraft"
+  when: __kraft_installed_home | default('') | length > 0
+
 - name: "Install new Kafka version."
   ansible.builtin.include_role:
     name: amq_streams_common

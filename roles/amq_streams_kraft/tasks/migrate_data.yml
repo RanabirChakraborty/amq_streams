@@ -1,0 +1,59 @@
+---
+# Migrate KRaft data from a previous, version-specific data dir to amq_streams_kraft_data_dir.
+# Included from storage.yml (regular run) and upgrade.yml (rolling upgrade).
+# Input:
+#   __kraft_migration_source: old data dir, e.g. /opt/kafka_2.13-<version>/data/kraft
+- name: Check for existing data at previous data dir
+  ansible.builtin.stat:
+    path: "{{ __kraft_migration_source }}/meta.properties"
+  register: __old_data_dir
+
+- name: Check if new data directory already has data
+  ansible.builtin.stat:
+    path: "{{ amq_streams_kraft_data_dir }}/meta.properties"
+  register: __new_data_dir
+
+- name: Migrate KRaft data from previous data dir
+  when:
+    - __old_data_dir.stat.exists
+    - not __new_data_dir.stat.exists
+    - amq_streams_kraft_data_dir != __kraft_migration_source
+  become: "{{ amq_streams_kraft_priv_escalation }}"
+  block:
+    - name: Stop KRaft service before moving data
+      ansible.builtin.service:
+        name: "{{ amq_streams_kraft_service_name }}"
+        state: stopped
+      failed_when: false
+
+    - name: Ensure new data directory exists
+      ansible.builtin.file:
+        path: "{{ amq_streams_kraft_data_dir }}"
+        state: directory
+        owner: "{{ amq_streams_kraft_user | default('kafka') }}"
+        group: "{{ amq_streams_kraft_group | default('kafka') }}"
+        mode: '0750'
+
+    - name: Move data from previous path to new path
+      ansible.builtin.shell:
+        cmd: mv {{ __kraft_migration_source }}/* {{ amq_streams_kraft_data_dir }}/
+      register: __migrate_result
+      changed_when: __migrate_result.rc == 0
+
+    - name: Set ownership on migrated data directory
+      ansible.builtin.file:
+        path: "{{ amq_streams_kraft_data_dir }}"
+        state: directory
+        owner: "{{ amq_streams_kraft_user | default('kafka') }}"
+        group: "{{ amq_streams_kraft_group | default('kafka') }}"
+        mode: '0750'
+        recurse: true
+
+    - name: Remove old data directory after migration
+      ansible.builtin.file:
+        path: "{{ __kraft_migration_source }}"
+        state: absent
+
+    - name: Display data migration result
+      ansible.builtin.debug:
+        msg: "Migrated KRaft data from {{ __kraft_migration_source }} to {{ amq_streams_kraft_data_dir }}"
